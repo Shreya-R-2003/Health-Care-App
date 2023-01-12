@@ -1,2 +1,2 @@
 # Health-Care-App
-Connects patients to required dialysis centres
+Based on user location, name, area, it displays nearby dialysis centres
