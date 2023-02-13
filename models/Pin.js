@@ -1,31 +1,46 @@
 const mongoose = require('mongoose');
 
 const PinSchema = new mongoose.Schema({
-    hospname:{
+    name:{
         type:String,
         require:true
     },
-    title:{
+    rating:{
         type:String,
         require:true
     },
-    desc:{
+    area:{
         type:String,
         require:false
     },
-    rating:{
-        type:Number,
-        require:true
+    // lat:{
+    //     type:Number,
+    //     require:true
+    // },
+    // long:{ 
+    //     type:Number,
+    //     require:true
+    // },
+    loc: {
+        type: {
+          type: String,
+          enum: ["Point"]
+        },
+        coordinates: {
+          type: [Number]
+        },
+    bedcap:{
+        type:String,
+        reqiure:true,
     },
-    lat:{ 
-        type:Number,
-        require:true
-    },
-    long:{
-        type:Number,
+    pin:{
+        type:String,
         reqiure:true,
     }
     
-})
+}
+}
+)
+
 
 module.exports = mongoose.model("Pin", PinSchema);
