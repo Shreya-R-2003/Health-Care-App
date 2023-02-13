@@ -3,13 +3,7 @@ const router = require('express').Router();
 // browserEnv(['navigator']);
 
 const Pin = require('../models/Pin');
-// const Geolocation = require('Geolocation');
 
-//create a pin
-let a = 0;
-let b = 0;
-let c = 0;
-let d = 0;
 router.post('/', async (req,res) => {
     const newPin = new Pin(req.body);
     try{
@@ -31,9 +25,12 @@ router.get('/', async (req, res) =>{
     }
 })
 
-router.get('/pincode', async (req, res) =>{
+//search based on area name
+router.get('/searcharea/:key', async (req, res) =>{
     try{
-        const pins = await Pin.find({title:{$eq:"London"}});
+        const pins = await Pin.find(
+            {"area":{$regex : req.params.key}}
+        );
         res.status(200).json(pins);
     }
     catch(err){
@@ -41,36 +38,112 @@ router.get('/pincode', async (req, res) =>{
     }
 })
 
-// //around my location
+//search based on hospital name
+router.get('/searchname/:key', async (req, res) =>{
+    try{
+        const pins = await Pin.find(
+            {"name":{$regex : req.params.key}}
+        );
+        // res.writeHead(200,{'Content-type':'text/html'});
+        // res.write(pins);
+        res.status(200).json(pins);
+    }
+    catch(err){
+        res.status(500).json(err);
+    }
+})
+
+//search based on pin code
+router.get('/searchpin/:key', async (req, res) =>{
+    try{
+        const pins = await Pin.find(
+            {"pin":{$regex : req.params.key}}
+        );
+        res.status(200).json(pins);
+    }
+    catch(err){
+        res.status(500).json(err);
+    }
+})
+
+exports.find = function(req, res) {
+    console.log("jm: lat: " + req.body.lat);
+    console.log("jm: long: " + req.body.long);
+}
+
+// router.post('/toilets',async (req,res) =>  {
+//     console.log("jm: lat: " + req.body.lat);
+//     console.log("jm: long: " + req.body.long);
+//     console.log("jm: distance: " + req.body.distance);
+  
+//     let toilets = await Toilet.find({
+//       loc: {
+//         $near: {
+//           $geometry: {
+//             type: "Point",
+//             coordinates: [req.body.long, req.body.lat]
+//           },
+//           $minDistance: 0,
+//           $maxDistance: req.body.distance
+//         }
+//       }
+//     }).limit(3).find((err, toiletResults) => {
+//       console.log("jm: toilet results: ", JSON.stringify(toiletResults, 0, 2));
+  
+//       if (err) {
+//         res.json({
+//           status: "error",
+//           message: err
+//         });
+//       }
+//       res.json({
+//         status: "success",
+//         message: "Toilets retrieved successfully",
+//         data: toiletResults
+//       });
+//     });
+
+// });
+
+//around my location
+// var c = 0;
+// var d = 0;
+
 // c,d = getLocation();
-// router.get('/myloc', async (req, res) =>{
-//     try{
-//         c,d = getLocation();
-//         console.log(c,d);
-//         latlongrange(c,d);
-//         let p = c-a;
-//         let q = c+a;
-//         let t = d-b;
-//         let r = d+b;
-//         console.log(a,b,c,d);
-//         const pins = await Pin.find({ $and: [ { lat : {$lte : q} }, { lat : {$gte : p} }, { long : {$gte : t} }, { long : {$lte : r} }]}  );
-//         res.status(200).json(pins);
-//     }
-//     catch(err){
-//         res.status(500).json(err);
-//     }
-// })
+router.get('/myloc', async (req, res) =>{
+    
+    try{
+        let c = 12;
+        let d = 77;
+
+        const [a,b] = latlongrange(c,d);
+
+        let p = c-a;
+        let q = c+a;
+        let t = d-b;
+        let r = d+b;
+
+        console.log(a);
+        console.log(b);
+        console.log(c);
+        console.log(d);
+        
+        const pins = await Pin.find({ $and: [ { lat : {$lte : q} }, { lat : {$gte : p} }, { long : {$gte : t} }, { long : {$lte : r} }]}  );
+        res.status(200).json(pins);
+    }
+    catch(err){
+        res.status(500).json(err);
+    }
+})
 
 
 // function getLocation() {
-//         if (navigator.geolocation) {
-//           navigator.geolocation.getCurrentPosition(showPosition);
+//         if (global.navigator.geolocation) {
+//           global.navigator.geolocation.getCurrentPosition(showPosition);
 //         } else {
 //           console.log("geolocation not supported");
 //       }
 // }
-
-
 
 // function showPosition(position) {
 //     // x.innerHTML = "Latitude: " + position.coords.latitude +
@@ -80,49 +153,86 @@ router.get('/pincode', async (req, res) =>{
 //     return (latitude, longitude);
     
 //   }
+var rad = function(x) {
+    return x * Math.PI / 180;
+  };
+  
+function latlongrange(l,m){  
+  var R = 6378137; // Earth’s mean radius in meter
+  let origin = {lat: l, lng: m}
+  
+  let latDist = R * rad(1)
+  let lngDist = R * rad(1) * Math.cos(rad(origin.lat))
+  
+  console.log(latDist, lngDist);
+  
+  let areaRadius = 200000000000; // in meters
+  
+  let latitudeRangeDelta = areaRadius / latDist;
+  let longitudeRangeDelta = areaRadius / lngDist;
+  
+  a = latitudeRangeDelta;
+  b = longitudeRangeDelta;
 
-//   // function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
-//   //   var R = 6371; // Radius of the earth in km
-//   //   var dLat = deg2rad(lat2-lat1);  // deg2rad below
-//   //   var dLon = deg2rad(lon2-lon1); 
-//   //   var a = 
-//   //     Math.sin(dLat/2) * Math.sin(dLat/2) +
-//   //     Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-//   //     Math.sin(dLon/2) * Math.sin(dLon/2)
-//   //     ; 
-//   //   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-//   //   var d = R * c; // Distance in km
-//   //   x = d;
-//   //   return d;
-//   // }
-  
-//   // function deg2rad(deg) {
-//   //   return deg * (Math.PI/180)
-//   // }
-// //area range
-//   var rad = function(x) {
-//     return x * Math.PI / 180;
-//   };
-  
-// function latlongrange(l,m){  
-//   var R = 6378137; // Earth’s mean radius in meter
-//   let origin = {lat: l, lng: m}
-  
-//   let latDist = R * rad(1)
-//   let lngDist = R * rad(1) * Math.cos(rad(origin.lat))
-  
-//   console.log(latDist, lngDist);
-  
-//   let areaRadius = 1000; // in meters
-  
-//   let latitudeRangeDelta = areaRadius / latDist;
-//   let longitudeRangeDelta = areaRadius / lngDist;
-  
-//   a = latitudeRangeDelta;
-//   b = longitudeRangeDelta;
-// }
-//   // console.log('latitude of the area is within range [' + (origin.lat - latitudeRangeDelta) + ', ' + (origin.lat + latitudeRangeDelta) + ']')
-//   // console.log('longitude of the area is within range [' + (origin.lng - longitudeRangeDelta) + ', ' + (origin.lng + longitudeRangeDelta) + ']')
+  return [latitudeRangeDelta, longitudeRangeDelta];
 
+//   console.log('latitude of the area is within range [' + (origin.lat - latitudeRangeDelta) + ', ' + (origin.lat + latitudeRangeDelta) + ']')
+//   console.log('longitude of the area is within range [' + (origin.lng - longitudeRangeDelta) + ', ' + (origin.lng + longitudeRangeDelta) + ']')
+}
 //   //area range end
+
+
+
+
+//chatgpt code
+
+router.get('/search/location', async (req, res) =>{
+    const pins = await Pin.find(
+        {"pin":{$regex : req.params.key}}
+    );
+    const { lat, lng } = req.query;
+  
+    Pin.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [lng, lat],
+          },
+          $maxDistance: 1000,
+        },
+      },
+    })
+      .then((results) => {
+        res.send(results);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).send(error);
+      });
+  });
+  //chaptgpt ends here
+
+
+  //search based on location name
+// router.get('/searcharea/:key', async (req, res) =>{
+//     try{
+//         const pins = await Pin.find({
+//             location: {
+//               $near: {
+//                 $geometry: {
+//                   type: 'Point',
+//                   coordinates: [lng, lat],
+//                 },
+//                 $maxDistance: 1000,
+//               },
+//             },
+//           })
+//         res.status(200).json(pins);
+//     }
+//     catch(err){
+//         res.status(500).json(err);
+//     }
+// })
+
 module.exports = router;
