@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const PinSchema = new mongoose.Schema({
     name:{
         type:String,
-        require:true
+        
     },
     rating:{
         type:String,
-        require:true
+        
     },
     area:{
         type:String,
@@ -41,6 +41,6 @@ const PinSchema = new mongoose.Schema({
 }
 }
 )
-
+PinSchema.index({ loc: '2dsphere' });
 
 module.exports = mongoose.model("Pin", PinSchema);
