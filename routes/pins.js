@@ -184,34 +184,30 @@ function latlongrange(l,m){
 
 
 
-//chatgpt code
 
-router.get('/search/location', async (req, res) =>{
-    const pins = await Pin.find(
-        {"pin":{$regex : req.params.key}}
-    );
-    const { lat, lng } = req.query;
-  
-    Pin.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [lng, lat],
-          },
-          $maxDistance: 1000,
-        },
-      },
-    })
-      .then((results) => {
-        res.send(results);
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).send(error);
+
+router.get('/search/location', async (req, res) => {
+    try {
+      const { lat, lng } = req.query;
+      const pins = await Pin.find({
+        loc: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(lng), parseFloat(lat)]
+            },
+            $maxDistance: 1000 // 10 km
+          }
+        }
       });
+      res.status(200).json(pins);
+    } catch (err) {
+      res.status(500).json(err);
+    }
   });
-  //chaptgpt ends here
+  
+  
+
 
 
   //search based on location name
